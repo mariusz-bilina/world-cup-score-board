@@ -33,6 +33,11 @@ class LiveScoreBoardTest {
     }
 
     @Test
+    void startGameShouldThrowException_whenSameTeamProvidedTwice() {
+        assertIllegalArgumentExceptionIsThrown(() -> liveScoreBoard.startGame("team", "team"));
+    }
+
+    @Test
     void startGameShouldThrowException_whenOneTeamCurrentlyPlayAnotherGame() {
         // given
         String homeTeam = "home";
