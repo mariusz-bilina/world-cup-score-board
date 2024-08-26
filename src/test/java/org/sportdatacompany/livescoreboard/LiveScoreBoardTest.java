@@ -1,0 +1,61 @@
+package org.sportdatacompany.livescoreboard;
+
+import org.assertj.core.api.ListAssert;
+import org.assertj.core.api.ThrowableAssert;
+import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+
+class LiveScoreBoardTest {
+
+    private final LiveScoreBoard liveScoreBoard = new LiveScoreBoard();
+
+    @Test
+    void startGameShouldAddNewEntryWithInitialScore() {
+        // given
+        String homeTeam = "home";
+        String awayTeam = "away";
+        // when
+        liveScoreBoard.startGame(homeTeam, awayTeam);
+        // then
+        assertBoard().containsOnly(new LiveResultDto(homeTeam, 0, awayTeam, 0));
+    }
+
+    @Test
+    void startGameShouldThrowException_whenSameTeamsAlreadyPlay() {
+        // given
+        String homeTeam = "home";
+        String awayTeam = "away";
+        liveScoreBoard.startGame(homeTeam, awayTeam);
+        // when
+        assertIllegalArgumentExceptionIsThrown(() -> liveScoreBoard.startGame(homeTeam, awayTeam));
+    }
+
+    @Test
+    void startGameShouldThrowException_whenOneTeamCurrentlyPlayAnotherGame() {
+        // given
+        String homeTeam = "home";
+        String awayTeam = "away";
+        String anotherAwayTeam = "another away";
+        liveScoreBoard.startGame(homeTeam, awayTeam);
+        // when
+        assertIllegalArgumentExceptionIsThrown(() -> liveScoreBoard.startGame(homeTeam, anotherAwayTeam));
+    }
+
+    @Test
+    void startGameShouldThrowException_whenInvalidTeamProvided() {
+        assertIllegalArgumentExceptionIsThrown(() -> liveScoreBoard.startGame(null, "away"));
+        assertIllegalArgumentExceptionIsThrown(() -> liveScoreBoard.startGame("home", null));
+        assertIllegalArgumentExceptionIsThrown(() -> liveScoreBoard.startGame("", "away"));
+        assertIllegalArgumentExceptionIsThrown(() -> liveScoreBoard.startGame("home", ""));
+    }
+
+    private ListAssert<LiveResultDto> assertBoard() {
+        return assertThat(liveScoreBoard.getLiveResults());
+    }
+
+    private void assertIllegalArgumentExceptionIsThrown(ThrowableAssert.ThrowingCallable throwingCallable) {
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(throwingCallable);
+    }
+}
