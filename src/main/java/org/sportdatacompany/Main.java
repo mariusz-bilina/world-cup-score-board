@@ -6,6 +6,7 @@ public class Main {
     public static void main(String[] args) {
         LiveScoreBoard liveScoreBoard = new LiveScoreBoard();
         liveScoreBoard.startGame("Poland", "Germany");
-        liveScoreBoard.getLiveResults().forEach(System.out::println);
+        liveScoreBoard.updateScore("Poland", 1, "Germany", 0);
+        liveScoreBoard.summaryByTotalScore().forEach(System.out::println);
     }
 }

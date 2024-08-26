@@ -54,8 +54,8 @@ class LiveScoreBoardTest {
     @Test
     void finishGameShouldRemoveGameFromBoard() {
         // given
-        String homeTeam = "home team";
-        String awayTeam = "away team";
+        String homeTeam = "home";
+        String awayTeam = "away";
         liveScoreBoard.startGame(homeTeam, awayTeam);
         // when
         liveScoreBoard.finishGame(homeTeam, awayTeam);
@@ -66,8 +66,8 @@ class LiveScoreBoardTest {
     @Test
     void finishGameShouldThrowException_whenGameDoesNotExist() {
         // given
-        String homeTeam = "home team";
-        String awayTeam = "away team";
+        String homeTeam = "home";
+        String awayTeam = "away";
         // when
         assertIllegalArgumentExceptionIsThrown(() -> liveScoreBoard.finishGame(homeTeam, awayTeam));
     }
@@ -75,8 +75,8 @@ class LiveScoreBoardTest {
     @Test
     void shouldUpdateScore() {
         // given
-        String homeTeam = "home team";
-        String awayTeam = "away team";
+        String homeTeam = "home";
+        String awayTeam = "away";
         liveScoreBoard.startGame(homeTeam, awayTeam);
         // when
         liveScoreBoard.updateScore(homeTeam, 3, awayTeam, 1);
@@ -85,26 +85,50 @@ class LiveScoreBoardTest {
     }
 
     @Test
-    void updateScoreShouldThrowException_whenGameDoesNotExist() {
-        // given
-        String homeTeam = "home team";
-        String awayTeam = "away team";
-        liveScoreBoard.startGame(homeTeam, awayTeam);
-        // when
-        assertIllegalArgumentExceptionIsThrown(() -> liveScoreBoard.updateScore(homeTeam, 1, "nonexisting team", 0));
+    void updateScoreShouldThrowException_whenTeamIsIllegal() {
+        assertIllegalArgumentExceptionIsThrown(() -> liveScoreBoard.updateScore(null, 1, "away", 0));
+        assertIllegalArgumentExceptionIsThrown(() -> liveScoreBoard.updateScore("home", 1, null, 0));
     }
 
     @Test
-    void updateScoreShouldThrowException_whenTeamIsNull() {
-        assertIllegalArgumentExceptionIsThrown(() -> liveScoreBoard.updateScore(null, 1, "away team", 0));
-        assertIllegalArgumentExceptionIsThrown(() -> liveScoreBoard.updateScore("home team", 1, null, 0));
+    void updateScoreShouldThrowException_whenScoreIsIllegal() {
+        // given
+        liveScoreBoard.startGame("home", "away");
+        // when / then
+        assertIllegalArgumentExceptionIsThrown(() -> liveScoreBoard.updateScore("home", -1, "away", 0));
+        assertIllegalArgumentExceptionIsThrown(() -> liveScoreBoard.updateScore("home", 1000, "away", 0));
+        assertIllegalArgumentExceptionIsThrown(() -> liveScoreBoard.updateScore("home", 0, "away", -1));
+        assertIllegalArgumentExceptionIsThrown(() -> liveScoreBoard.updateScore("home", 0, "away", 1000));
+    }
+
+    @Test
+    void summaryByTotalScoreShouldReturnSortedBy_totalScoreDescending_andAddedOrderDescending() {
+        // given
+        givenCurrentLiveScore("Mexico", 0, "Canada", 5);
+        givenCurrentLiveScore("Spain", 10, "Brazil", 2);
+        givenCurrentLiveScore("Germany", 2, "France", 2);
+        givenCurrentLiveScore("Uruguay", 6, "Italy", 6);
+        givenCurrentLiveScore("Argentina", 3, "Australia", 1);
+        // when // then
+        assertBoard().containsExactly(
+                new LiveResultDto("Uruguay", 6, "Italy", 6),
+                new LiveResultDto("Spain", 10, "Brazil", 2),
+                new LiveResultDto("Mexico", 0, "Canada", 5),
+                new LiveResultDto("Argentina", 3, "Australia", 1),
+                new LiveResultDto("Germany", 2, "France", 2)
+        );
     }
 
     private ListAssert<LiveResultDto> assertBoard() {
-        return assertThat(liveScoreBoard.getLiveResults());
+        return assertThat(liveScoreBoard.summaryByTotalScore());
     }
 
     private void assertIllegalArgumentExceptionIsThrown(ThrowableAssert.ThrowingCallable throwingCallable) {
         assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(throwingCallable);
+    }
+
+    private void givenCurrentLiveScore(String homeTeam, int homeScore, String awayTeam, int awayScore) {
+        liveScoreBoard.startGame(homeTeam, awayTeam);
+        liveScoreBoard.updateScore(homeTeam, homeScore, awayTeam, awayScore);
     }
 }

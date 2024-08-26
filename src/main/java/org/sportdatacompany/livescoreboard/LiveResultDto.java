@@ -1,8 +1,5 @@
 package org.sportdatacompany.livescoreboard;
 
-public record LiveResultDto(String home, int homeScore, String away, int awayScore) {
+public record LiveResultDto(String homeTeam, int homeScore, String awayTeam, int awayScore) {
 
-    int scoreSum() {
-        return homeScore + awayScore;
-    }
 }

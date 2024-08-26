@@ -8,63 +8,64 @@ import java.util.Optional;
 
 public class LiveScoreBoard {
 
-    private final List<Game> games = new ArrayList<>();
+    private final List<LiveGameScore> liveScores = new ArrayList<>();
 
     public void startGame(String homeTeam, String awayTeam) {
-        validateTeams(homeTeam, awayTeam);
-        validateTeamDoesNotPlayAnotherGame(homeTeam, awayTeam);
-        Game game = new Game(homeTeam, awayTeam);
-        this.games.add(game);
+        Participants participants = new Participants(homeTeam, awayTeam);
+        validateTeamDoesNotPlayOtherGame(participants);
+        LiveGameScore liveGameScore = new LiveGameScore(participants);
+        this.liveScores.add(liveGameScore);
     }
 
     public void finishGame(String homeTeam, String awayTeam) {
-        validateTeams(homeTeam, awayTeam);
-        Game game = findGame(homeTeam, awayTeam);
-        this.games.remove(game);
+        Participants participants = new Participants(homeTeam, awayTeam);
+        LiveGameScore liveGameScore = findLiveGameScore(participants);
+        this.liveScores.remove(liveGameScore);
     }
 
     public void updateScore(String homeTeam, int homeScore, String awayTeam, int awayScore) {
-        validateTeams(homeTeam, awayTeam);
-        Game game = findGame(homeTeam, awayTeam);
-        game.updateResult(homeScore, awayScore);
+        Participants participants = new Participants(homeTeam, awayTeam);
+        Score newScore = new Score(homeScore, awayScore);
+        LiveGameScore liveGameScore = findLiveGameScore(participants);
+        liveGameScore.updateScore(newScore);
     }
 
-    public List<LiveResultDto> getLiveResults() {
-        ArrayList<Game> gamesCopy = new ArrayList<>(games);
-        Collections.reverse(gamesCopy);
-        return gamesCopy.stream()
+    public List<LiveResultDto> summaryByTotalScore() {
+        return liveScoresViewSortedByAddedOrderDescending().stream()
+                .sorted(byTotalScoreDescending())
                 .map(LiveScoreBoard::toLiveResultDto)
-                .sorted(Comparator.comparingInt(LiveResultDto::scoreSum).reversed())
                 .toList();
     }
 
-    private void validateTeams(String homeTeam, String awayTeam) {
-        validateTeam(homeTeam);
-        validateTeam(awayTeam);
+    private LiveGameScore findLiveGameScore(Participants participants) {
+        return this.liveScores.stream()
+                .filter(liveGameScore -> liveGameScore.getParticipants().equals(participants))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException(String.format("Game '%s' does no exist", participants)));
     }
 
-    private void validateTeam(String team) {
-        if (team == null || team.isBlank())
-            throw new IllegalArgumentException("Team name cannot be null or empty");
-    }
-
-    private void validateTeamDoesNotPlayAnotherGame(String homeTeam, String awayTeam) {
-        Optional<Game> gameWithSameTeam = this.games.stream()
-                .filter(game -> game.hasSameParticipant(homeTeam, awayTeam))
+    private void validateTeamDoesNotPlayOtherGame(Participants participants) {
+        Optional<LiveGameScore> foundGame = this.liveScores.stream()
+                .filter(liveGameScore -> liveGameScore.hasSameParticipant(participants))
                 .findAny();
-        if (gameWithSameTeam.isPresent()) {
-            throw new IllegalArgumentException("Game with same team already exists: " + gameWithSameTeam.get());
+        if (foundGame.isPresent()) {
+            throw new IllegalArgumentException("One of participants plays another game: " + foundGame.get().getParticipants());
         }
     }
 
-    private static LiveResultDto toLiveResultDto(Game game) {
-        return new LiveResultDto(game.getHomeTeam(), game.getHomeScore(), game.getAwayTeam(), game.getAwayScore());
+    private static Comparator<LiveGameScore> byTotalScoreDescending() {
+        return Comparator.comparingInt(LiveGameScore::getTotalScore).reversed();
     }
 
-    private Game findGame(String home, String away) {
-        return this.games.stream()
-                .filter(g -> g.getHomeTeam().equals(home) && g.getAwayTeam().equals(away))
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException(String.format("Game '%s'-'%s' does no exist", home, away)));
+    private ArrayList<LiveGameScore> liveScoresViewSortedByAddedOrderDescending() {
+        ArrayList<LiveGameScore> gamesCopy = new ArrayList<>(liveScores);
+        Collections.reverse(gamesCopy);
+        return gamesCopy;
+    }
+
+    private static LiveResultDto toLiveResultDto(LiveGameScore liveGameScore) {
+        Participants participants = liveGameScore.getParticipants();
+        Score score = liveGameScore.getScore();
+        return new LiveResultDto(participants.homeTeam(), score.getHomeScore(), participants.awayTeam(), score.getAwayScore());
     }
 }
