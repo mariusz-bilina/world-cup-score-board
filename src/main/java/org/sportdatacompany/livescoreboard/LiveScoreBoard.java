@@ -23,6 +23,12 @@ public class LiveScoreBoard {
         this.games.remove(game);
     }
 
+    public void updateScore(String homeTeam, int homeScore, String awayTeam, int awayScore) {
+        validateTeams(homeTeam, awayTeam);
+        Game game = findGame(homeTeam, awayTeam);
+        game.updateResult(homeScore, awayScore);
+    }
+
     public List<LiveResultDto> getLiveResults() {
         ArrayList<Game> gamesCopy = new ArrayList<>(games);
         Collections.reverse(gamesCopy);

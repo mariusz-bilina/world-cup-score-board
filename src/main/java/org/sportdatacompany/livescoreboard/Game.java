@@ -4,8 +4,8 @@ class Game {
 
     private final String homeTeam;
     private final String awayTeam;
-    private final int homeScore;
-    private final int awayScore;
+    private int homeScore;
+    private int awayScore;
 
     Game(String homeTeam, String awayTeam) {
         this.homeTeam = homeTeam;
@@ -23,6 +23,11 @@ class Game {
 
     boolean isEqual(String first, String second) {
         return first.equals(second);
+    }
+
+    public void updateResult(int homeScore, int awayScore) {
+        this.homeScore = homeScore;
+        this.awayScore = awayScore;
     }
 
     String getHomeTeam() {
