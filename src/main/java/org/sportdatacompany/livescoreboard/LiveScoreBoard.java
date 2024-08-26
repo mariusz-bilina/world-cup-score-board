@@ -17,6 +17,12 @@ public class LiveScoreBoard {
         this.games.add(game);
     }
 
+    public void finishGame(String homeTeam, String awayTeam) {
+        validateTeams(homeTeam, awayTeam);
+        Game game = findGame(homeTeam, awayTeam);
+        this.games.remove(game);
+    }
+
     public List<LiveResultDto> getLiveResults() {
         ArrayList<Game> gamesCopy = new ArrayList<>(games);
         Collections.reverse(gamesCopy);
@@ -47,5 +53,12 @@ public class LiveScoreBoard {
 
     private static LiveResultDto toLiveResultDto(Game game) {
         return new LiveResultDto(game.getHomeTeam(), game.getHomeScore(), game.getAwayTeam(), game.getAwayScore());
+    }
+
+    private Game findGame(String home, String away) {
+        return this.games.stream()
+                .filter(g -> g.getHomeTeam().equals(home) && g.getAwayTeam().equals(away))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException(String.format("Game '%s'-'%s' does no exist", home, away)));
     }
 }

@@ -51,6 +51,27 @@ class LiveScoreBoardTest {
         assertIllegalArgumentExceptionIsThrown(() -> liveScoreBoard.startGame("home", ""));
     }
 
+    @Test
+    void finishGameShouldRemoveGameFromBoard() {
+        // given
+        String homeTeam = "home team";
+        String awayTeam = "away team";
+        liveScoreBoard.startGame(homeTeam, awayTeam);
+        // when
+        liveScoreBoard.finishGame(homeTeam, awayTeam);
+        // then
+        assertBoard().isEmpty();
+    }
+
+    @Test
+    void finishGameShouldThrowException_whenGameDoesNotExist() {
+        // given
+        String homeTeam = "home team";
+        String awayTeam = "away team";
+        // when
+        assertIllegalArgumentExceptionIsThrown(() -> liveScoreBoard.finishGame(homeTeam, awayTeam));
+    }
+
     private ListAssert<LiveResultDto> assertBoard() {
         return assertThat(liveScoreBoard.getLiveResults());
     }
